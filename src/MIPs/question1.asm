@@ -1,30 +1,41 @@
-# Store the first input in a register
+.data
+prompt: .asciiz "Enter n, followed by n lines of text:\n"
+userInput: .space 20 #user is permitted to enter 20 characters
 
-
-#
-# question1.asm
-#
-
-	.data
-input:	.space	256
-output:	.space	256
-
-	.text
-	.globl main
+.globl main
+.text
 main:
-	li	$v0, 8			# Ask the user for the string they want to reverse
-	la	$a0, input		# We'll store it in 'input'
-	li	$a1, 256		# Only 256 chars/bytes allowed
-	syscall
-	
-	li	$v0, 4			# We output the string to verify
-	la	$a0, input
-	syscall
-	
-	jal	strlen			# JAL to strlen function, saves return address to $ra
-	
-	add	$t1, $zero, $v0		# Copy some of our parameters for our reverse function
-	add	$t2, $zero, $a0		# We need to save our input string to $t2, it gets
-	add	$a0, $zero, $v0		# butchered by the syscall.
-	li	$v0, 1			# This prints the length that we found in 'strlen'
-	syscall
+    # user prompt
+    li $v0, 4
+    la $a0, prompt
+    syscall
+
+    # getting the name of the user
+    li $v0, 8
+    la $a0, userInput
+    li $a1, 20
+    syscall 
+
+    add $t1, $t0, $0      #t1 = string length
+    strLength: 
+        lbu   $t2, 0($t0)
+        beq   $t2, $zero, Exit  # if reach the end of array, Exit
+        addiu $t0, $t0,   1     # add 1 to count the length
+        j strLength
+    Exit:
+
+    add $t1, $t0, $0      # t1 = string length
+    li  $t2, 0            # counter i = 0
+
+    li $v0, 11
+    reverseString:
+        slt  $t3, $t2, $t1    # if i < stringlength
+        beq  $t3, $0,  Exit2  # if t3 reaches he end of the array
+        addi $t0, $t0, -1     # decrement the array 
+        lbu  $a0, 0($t0)      # load the array from the end
+        syscall
+        j reverseString
+    Exit2:
+
+    li $v0, 10
+    syscall
